@@ -1,0 +1,27 @@
+# System and editor files
+.DS_Store
+.idea/
+.vscode/
+*.log
+*.bak
+*.swp
+*.swo
+
+# Node.js/React
+/node_modules
+/.pnp
+.pnp.js
+/build
+/dist
+/coverage
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/

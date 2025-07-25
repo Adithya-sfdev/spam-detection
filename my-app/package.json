@@ -2,6 +2,10 @@
   "name": "my-app",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://github.com/Adithya-sfdev/spam-detection",
+  "engines": {
+    "node": ">=16"
+  },
   "dependencies": {
     "@react-oauth/google": "^0.12.2",
     "@testing-library/dom": "^10.4.0",
@@ -16,7 +20,10 @@
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
- "scripts": {
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  },
+  "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -41,8 +48,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "gh-pages": "^6.3.0"
   }
 }

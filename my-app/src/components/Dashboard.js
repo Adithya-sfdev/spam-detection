@@ -3,194 +3,204 @@ import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 
 const Dashboard = ({ user, onLogout }) => {
-  const [inputText, setInputText] = useState('');
-  const [result, setResult] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [predictionDetails, setPredictionDetails] = useState(null);
-  const [apiStatus, setApiStatus] = useState('checking'); // Initial state is 'checking'
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+    const [inputText, setInputText] = useState('');
+    const [result, setResult] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [showDetails, setShowDetails] = useState(false);
+    const navigate = useNavigate();
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!user?.isAuthenticated) {
-      navigate('/login');
-    }
-    checkApiHealth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, navigate]);
+    useEffect(() => {
+        if (!user?.isAuthenticated) {
+            navigate('/login');
+        }
+    }, [user, navigate]);
 
-  // Check backend API status
-  const checkApiHealth = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setApiStatus(data.model_loaded ? 'model_loaded' : 'fallback_only');
-      } else {
-        setApiStatus('offline');
-      }
-    } catch (error) {
-      setApiStatus('offline');
-    }
-  };
+    const handleCheck = async () => {
+        if (!inputText.trim()) {
+            setError('Please enter some text to check.');
+            return;
+        }
+        
+        setIsLoading(true);
+        setError('');
+        setResult(null);
+        setShowDetails(false);
 
-  // Call backend or use fallback detection
-  const detectSpam = async (text) => {
-    try {
-      const response = await fetch('http://localhost:5000/predict', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-      if (response.ok) {
-        const data = await response.json();
-        const isSpam = data.is_spam;
-        const confidence = data.confidence !== undefined ? `${(data.confidence * 100).toFixed(1)}%` : 'N/A';
+        console.log('Sending request with text:', inputText);
 
-        return {
-          prediction: isSpam ? 'Spam' : 'Not Spam',
-          confidence: confidence,
-          details: { ...data, confidence },
-        };
-      }
-      throw new Error('API request failed');
-    } catch (error) {
-      return enhancedFallbackDetection(text);
-    }
-  };
+        try {
+            const response = await fetch('http://localhost:5000/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: inputText }),
+            });
 
-  // Client-side spam detection (keywords)
-  const enhancedFallbackDetection = (text) => {
-    const spamKeywords = [
-      'free', 'win', 'money', 'cash', 'prize', 'urgent', 'act now',
-      'limited time', 'call now', 'click here', 'congratulations'
-    ];
-    const lowerText = text.toLowerCase();
-    const keywordMatches = spamKeywords.filter(keyword =>
-      lowerText.includes(keyword)
-    ).length;
-    const isSpam = keywordMatches >= 2 ||
-      lowerText.includes('give me money') ||
-      /win.*\$\d+/.test(lowerText);
-    const confidence = Math.min(0.85 + (keywordMatches * 0.05), 0.95);
-    return {
-      prediction: isSpam ? 'Spam' : 'Not Spam',
-      confidence: `${(confidence * 100).toFixed(1)}%`,
-      details: { method: 'client_fallback', keyword_matches: keywordMatches, confidence: `${(confidence * 100).toFixed(1)}%` },
+            console.log('Response status:', response.status);
+            
+            const data = await response.json();
+            console.log('Enhanced API Response:', data);
+
+            if (!response.ok) {
+                throw new Error(data.error || 'An API error occurred.');
+            }
+            
+            if (!data.prediction) {
+                console.error('Invalid API response - missing prediction field:', data);
+                setError('Invalid response from server - missing prediction data.');
+                return;
+            }
+
+            setResult(data);
+            console.log('Enhanced result set to:', data);
+
+        } catch (err) {
+            console.error("Fetch Error:", err);
+            setError(`Error: Could not connect to the Enhanced AI analysis server. Please ensure the backend is running. [${err.message}]`);
+        } finally {
+            setIsLoading(false);
+        }
     };
-  };
 
-  // Handle spam check submission
-  const handleCheck = async () => {
-    if (!inputText.trim()) {
-      setError('Please enter some text to check');
-      return;
-    }
-    setIsLoading(true);
-    setError('');
-    setResult('');
-    setPredictionDetails(null);
-    try {
-      const detectionResult = await detectSpam(inputText);
-      setResult(detectionResult.prediction);
-      setPredictionDetails(detectionResult.details);
-    } catch (err) {
-      setError('Failed to analyze the message');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const handleLogout = () => {
+        localStorage.removeItem('user');
+        onLogout();
+        navigate('/login');
+    };
 
-  // Logout handler
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    onLogout();
-    navigate('/login');
-  };
+    // Get intent emoji based on analysis
+    const getIntentEmoji = (intent) => {
+        const intentEmojis = {
+            'greeting': '👋',
+            'business': '💼',
+            'personal': '👤',
+            'gratitude': '🙏',
+            'neutral': '💬'
+        };
+        return intentEmojis[intent] || '💬';
+    };
 
-  // API status display logic
-  const getApiStatusDisplay = () => {
-    switch (apiStatus) {
-      case 'model_loaded':
-        return { text: 'ML Model Active', color: '#2ed573', icon: '🤖' };
-      case 'fallback_only':
-        return { text: 'Fallback Mode', color: '#ffa502', icon: '⚡' };
-      default:
-        // This case now correctly handles 'offline' and any other unexpected states
-        return { text: 'Offline Mode', color: '#ff4757', icon: '📱' };
-    }
-  };
+    return (
+        <div className="dashboard-container">
+            <nav className="navbar">
+                <div className="navbar-left">
+                    <img src="/logo192.png" alt="Logo" className="navbar-logo" />
+                    <h2>Enhanced AI Spam Detector</h2>
+                </div>
+                <div className="navbar-right">
+                    <button onClick={handleLogout} className="logout-button">Logout</button>
+                </div>
+            </nav>
 
-  const statusDisplay = getApiStatusDisplay();
+            <div className="main-content">
+                <div className="detection-card">
+                    <h1>🤖 Advanced AI Spam Detection</h1>
+                    
+                    <div className="input-section">
+                        <textarea
+                            value={inputText}
+                            onChange={(e) => setInputText(e.target.value)}
+                            placeholder="Enter a message to analyze for spam using advanced AI contextual understanding..."
+                            rows="5"
+                        />
+                        <button
+                            onClick={handleCheck}
+                            className="check-button enhanced"
+                            disabled={isLoading || !inputText.trim()}
+                        >
+                            {isLoading ? '🧠 AI Analyzing...' : '🔍 Analyze with AI'}
+                        </button>
+                    </div>
 
-  return (
-    <div className="dashboard-container">
-      {/* Navigation Bar */}
-      <nav className="navbar">
-        <div className="navbar-left">
-          <img src="/logo192.png" alt="Logo" className="navbar-logo" />
-          <h2>Advanced Spam Detector</h2>
-        </div>
-        <div className="navbar-right">
-          {/* 
-            THE FIX IS HERE:
-            Only show the status indicator if the API status is NOT offline AND NOT checking.
-          */}
-          {apiStatus !== 'offline' && apiStatus !== 'checking' && (
-            <div className="api-status" style={{ backgroundColor: statusDisplay.color }}>
-              {statusDisplay.icon} {statusDisplay.text}
+                    {error && (<div className="error-message">❌ {error}</div>)}
+
+                    {result && !error && (
+                        <div className={`result enhanced ${result.prediction.toLowerCase().replace(' ', '-')}`}>
+                            <div className="result-header">
+                                <span className="result-icon">
+                                    {result.prediction === 'Spam' ? '🚨' : '✅'}
+                                </span>
+                                <span className="result-text">{result.prediction}</span>
+                            </div>
+                            
+                            {/* Enhanced AI Explanation */}
+                            {result.explanation && (
+                                <div className="ai-explanation">
+                                    <div className="explanation-icon">🧠</div>
+                                    <div className="explanation-text">{result.explanation}</div>
+                                </div>
+                            )}
+
+                            {/* Analysis Summary */}
+                            {result.analysis && (
+                                <div className="analysis-summary">
+                                    <div className="analysis-item">
+                                        <span className="analysis-label">
+                                            {getIntentEmoji(result.analysis.intent)} Intent:
+                                        </span>
+                                        <span className="analysis-value">{result.analysis.intent || 'neutral'}</span>
+                                    </div>
+                                    
+                                </div>
+                            )}
+
+                            {/* Toggle for detailed analysis */}
+                            {(result.analysis?.confidence_factors?.length > 0 || result.model_info) && (
+                                <div className="details-toggle">
+                                    <button 
+                                        onClick={() => setShowDetails(!showDetails)}
+                                        className="toggle-details-btn"
+                                    >
+                                        {showDetails ? '▼ Hide Details' : '▶ Show AI Analysis Details'}
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Detailed Analysis (collapsible) */}
+                            {showDetails && (
+                                <div className="detailed-analysis">
+                                    {result.analysis?.confidence_factors?.length > 0 && (
+                                        <div className="confidence-factors">
+                                            <h4>🔍 AI Analysis Factors:</h4>
+                                            <ul>
+                                                {result.analysis.confidence_factors.map((factor, index) => (
+                                                    <li key={index}>{factor}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {result.analysis?.context?.length > 0 && (
+                                        <div className="context-info">
+                                            <h4>📝 Context Analysis:</h4>
+                                            <div className="context-tags">
+                                                {result.analysis.context.map((ctx, index) => (
+                                                    <span key={index} className="context-tag">{ctx}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {result.model_info && (
+                                        <div className="model-info">
+                                            <h4>🤖 AI Model Information:</h4>
+                                            <div className="model-details">
+                                                <span>Architecture: {result.model_info.architecture}</span>
+                                                <span>Training Accuracy: {result.model_info.training_accuracy}</span>
+                                                {result.model_info.semantic_analysis && (
+                                                    <span>✅ Semantic Analysis: Enabled</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>     
             </div>
-          )}
-          <button onClick={handleLogout} className="logout-button">Logout</button>
         </div>
-      </nav>
-
-      {/* Main content area for centering the card */}
-      <div className="main-content">
-        <div className="detection-card">
-          <h1>Spam Detection System</h1>
-
-          <div className="input-section">
-            <textarea
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              placeholder="Enter a message to check for spam...&#10;&#10;Example: 'Congratulations you win a cash prize!' or 'Hello, how are you?'"
-              rows="5"
-            />
-            <button
-              onClick={handleCheck}
-              className="check-button"
-              disabled={isLoading || !inputText.trim()}
-            >
-              {isLoading ? '🔄 Analyzing...' : '🔍 Check for Spam'}
-            </button>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="error-message">❌ {error}</div>
-          )}
-
-          {/* Result */}
-          {result && (
-            <div className={`result ${result.toLowerCase().replace(' ', '-')}`}>
-              <div className="result-header">
-                <span className="result-icon">{result === 'Spam' ? '🚨' : '✅'}</span>
-                <span className="result-text">{result}</span>
-                {predictionDetails?.confidence && (
-                  <span className="confidence">({predictionDetails.confidence} confidence)</span>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default Dashboard;

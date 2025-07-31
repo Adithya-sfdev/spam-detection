@@ -1,4 +1,10 @@
 # Advanced Spam Detection System
+## _AI-Powered, Modern, and User-Friendly_
+
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)](https://www.python.org/)
+[![React](https://img.shields.io/badge/React-18-blue?logo=react)](https://react.dev/)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A modern, full-stack Spam Detection System using Machine Learning (TensorFlow), Flask API, and a beautiful React frontend with Firebase Authentication.
 
@@ -19,7 +25,7 @@ A modern, full-stack Spam Detection System using Machine Learning (TensorFlow), 
 - **Frontend:** React, Firebase Auth, CSS
 - **Backend:** Python, Flask, TensorFlow, Scikit-learn
 - **ML Model:** LSTM Neural Network (Keras)
-- **Data:** SMS Spam Collection Dataset (`spam.csv`)
+- **Data:** Enron Spam Dataset
 
 ---
 
@@ -29,8 +35,9 @@ spam-detection/
   backend/         # Flask API + ML model
     api.py
     train_model.py
-    spam_model/    # Saved model & vectorizer
-    spam.csv       # Training data
+    advanced_spam_model.h5    # Saved model
+    advanced_tokenizer.pickle # Tokenizer
+    enron_spam_data.csv      # Training data
   my-app/          # React frontend
     src/
       components/  # Login, Register, Dashboard
@@ -45,8 +52,7 @@ spam-detection/
 ### 1. Backend (Flask + ML)
 ```bash
 cd backend
-# (Optional) Create a virtual environment
-pip install -r requirements.txt  # Make sure to create this file with Flask, TensorFlow, pandas, scikit-learn, etc.
+pip install -r requirements.txt
 python train_model.py            # Train & save the model (only needed once)
 python api.py                    # Start the API (default: http://localhost:5000)
 ```
@@ -70,8 +76,9 @@ npm start                        # Runs on http://localhost:3000
 
 ## 📊 Model Details
 - Preprocessing: Lowercasing, removing emails/phones, special chars, etc.
-- Model: Bidirectional LSTM, trained on SMS spam dataset
+- Model: Bidirectional LSTM, trained on Enron spam dataset
 - Extra rules: Keyword boosting, HTTP link detection
+- Advanced features: Contextual analysis, intent detection
 
 ---
 
@@ -89,7 +96,7 @@ MIT
 ---
 
 ## 🙏 Acknowledgements
-- [UCI SMS Spam Collection Dataset](https://archive.ics.uci.edu/ml/datasets/sms+spam+collection)
+- [Enron Spam Dataset](https://www.kaggle.com/datasets/venky73/spam-mails-dataset)
 - [TensorFlow](https://www.tensorflow.org/)
 - [Create React App](https://create-react-app.dev/)
 - [Firebase](https://firebase.google.com/)

@@ -1,3 +1,5 @@
+# A:\\spam detection\\my-app\\.gitignore
+
 # System and editor files
 .DS_Store
 .idea/
@@ -7,18 +9,23 @@
 *.swp
 *.swo
 
-# Node.js/React
+# Node.js/React dependencies and build output
 /node_modules
-/.pnp
-.pnp.js
 /build
 /dist
 /coverage
 
-# Environment files
+# Yarn PnP
+# This was the missing part
+/.pnp
+.pnp.js
+
+# Environment files - VERY IMPORTANT for security
+# This ensures your API keys and client IDs are not committed
 .env
 .env.*
-!.env.example
+# The line below is optional: use it if you want to commit a template file
+# !.env.example
 
 # Logs
 npm-debug.log*

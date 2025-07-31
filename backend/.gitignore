@@ -1,8 +1,15 @@
+# A:\\spam detection\\backend\\.gitignore
+
 # Python cache and temporary files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# Python virtual environment
+# If you create a virtual environment folder (e.g., "venv" or ".venv"), add it here
+# venv/
+# .venv/
 
 # Model binaries and artifacts
 spam_model/
@@ -11,7 +18,7 @@ spam_model/
 *.joblib
 *.pickle
 
-# Environment files
+# Environment files - VERY IMPORTANT for security
 .env
 .env.*
 
@@ -25,5 +32,3 @@ spam_model/
 .DS_Store
 .idea/
 .vscode/
-
-# (spam.csv is public and should be committed; do not add it here)

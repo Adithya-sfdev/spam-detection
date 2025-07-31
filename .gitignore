@@ -1,3 +1,5 @@
+# A:\\spam detection\\.gitignore
+
 # Firebase build and deployment files
 /firebase-debug.log
 /firebase-debug.*.log
@@ -11,7 +13,7 @@ hosting/.cache
 # Firebase Functions
 /functions/node_modules/
 /functions/.env
-/functions/package-lock.json
+# Do NOT ignore package-lock.json, it ensures consistent builds
 
 # Firebase Emulators
 /firebase-*.zip
@@ -25,4 +27,5 @@ yarn-debug.log*
 yarn-error.log*
 
 # Environment files (local configs)
+/.env
 /.env.*

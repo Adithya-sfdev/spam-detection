@@ -27,31 +27,32 @@ function App() {
 
   return (
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
-      <Router>
+      {/* Use PUBLIC_URL so routing works under any subfolder */}
+      <Router basename={process.env.PUBLIC_URL || '/'}>
         <div className="App">
           <Routes>
             <Route
               path="/login"
               element={
-                user?.isAuthenticated ?
-                <Navigate to="/dashboard" /> :
-                <Login onLoginSuccess={handleLoginSuccess} />
+                user?.isAuthenticated
+                  ? <Navigate to="/dashboard" />
+                  : <Login onLoginSuccess={handleLoginSuccess} />
               }
             />
             <Route
               path="/register"
               element={
-                user?.isAuthenticated ?
-                <Navigate to="/dashboard" /> :
-                <Register onLoginSuccess={handleLoginSuccess} />
+                user?.isAuthenticated
+                  ? <Navigate to="/dashboard" />
+                  : <Register onLoginSuccess={handleLoginSuccess} />
               }
             />
             <Route
               path="/dashboard"
               element={
-                user?.isAuthenticated ?
-                <Dashboard user={user} onLogout={handleLogout} /> :
-                <Navigate to="/login" />
+                user?.isAuthenticated
+                  ? <Dashboard user={user} onLogout={handleLogout} />
+                  : <Navigate to="/login" />
               }
             />
             <Route path="/" element={<Navigate to="/login" />} />

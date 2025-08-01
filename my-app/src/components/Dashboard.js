@@ -10,6 +10,9 @@ const Dashboard = ({ user, onLogout }) => {
     const [showDetails, setShowDetails] = useState(false);
     const navigate = useNavigate();
 
+    // Get backend URL from environment variable or use default
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
     useEffect(() => {
         if (!user?.isAuthenticated) {
             navigate('/login');
@@ -28,9 +31,10 @@ const Dashboard = ({ user, onLogout }) => {
         setShowDetails(false);
 
         console.log('Sending request with text:', inputText);
+        console.log('Backend URL:', BACKEND_URL);
 
         try {
-            const response = await fetch('http://localhost:5000/predict', {
+            const response = await fetch(`${BACKEND_URL}/predict`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: inputText }),

@@ -1,106 +1,108 @@
-# Advanced Spam Detection System
-## _AI-Powered, Modern, and User-Friendly_
+# Enhanced AI Spam Detection System
 
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)](https://www.python.org/)
-[![React](https://img.shields.io/badge/React-18-blue?logo=react)](https://react.dev/)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+## 🚀 Deployment Instructions
 
-A modern, full-stack Spam Detection System using Machine Learning (TensorFlow), Flask API, and a beautiful React frontend with Firebase Authentication.
+### Frontend (Vercel) Deployment
 
----
+1. **Environment Variables Setup in Vercel:**
+   - Go to your Vercel project dashboard
+   - Navigate to Settings > Environment Variables
+   - Add the following variables:
 
-## 🚀 Features
-- **Real-time Spam Detection** using a trained ML model (LSTM, TensorFlow)
-- **REST API** backend with Flask
-- **User Authentication** (Email/Password & Google via Firebase)
-- **Attractive, Responsive UI** (React)
-- **Client-side fallback detection** if backend is offline
-- **Keyword-based spam heuristics** for extra accuracy
-- **Easy to deploy** (Docker-ready, local setup)
-
----
-
-## 🛠️ Tech Stack
-- **Frontend:** React, Firebase Auth, CSS
-- **Backend:** Python, Flask, TensorFlow, Scikit-learn
-- **ML Model:** LSTM Neural Network (Keras)
-- **Data:** Enron Spam Dataset
-
----
-
-## 📦 Project Structure
 ```
-spam-detection/
-  backend/         # Flask API + ML model
-    api.py
-    train_model.py
-    advanced_spam_model.h5    # Saved model
-    advanced_tokenizer.pickle # Tokenizer
-    enron_spam_data.csv      # Training data
-  my-app/          # React frontend
-    src/
-      components/  # Login, Register, Dashboard
-      firebase.js  # Firebase config
-  README.md        # (This file)
+REACT_APP_FIREBASE_API_KEY=your_firebase_api_key
+REACT_APP_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+REACT_APP_FIREBASE_PROJECT_ID=your_project_id
+REACT_APP_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+REACT_APP_FIREBASE_APP_ID=your_app_id
+REACT_APP_GOOGLE_CLIENT_ID=your_google_client_id
+REACT_APP_BACKEND_URL=https://your-backend-url.vercel.app
 ```
 
----
+2. **Deploy Frontend:**
+   ```bash
+   cd my-app
+   npm install
+   npm run build
+   # Deploy to Vercel
+   ```
 
-## ⚡ Quick Start
+### Backend (Vercel) Deployment
 
-### 1. Backend (Flask + ML)
-```bash
-cd backend
-pip install -r requirements.txt
-python train_model.py            # Train & save the model (only needed once)
-python api.py                    # Start the API (default: http://localhost:5000)
-```
+1. **Deploy Backend:**
+   ```bash
+   cd backend
+   # Deploy to Vercel using Vercel CLI or GitHub integration
+   ```
 
-### 2. Frontend (React)
+2. **Backend URL:**
+   - After deployment, get your backend URL from Vercel
+   - Update the `REACT_APP_BACKEND_URL` in frontend environment variables
+
+## 🔧 Local Development
+
+### Frontend
 ```bash
 cd my-app
 npm install
-npm start                        # Runs on http://localhost:3000
+npm start
 ```
 
----
+### Backend
+```bash
+cd backend
+pip install -r requirements.txt
+python api.py
+```
 
-## 🧑‍💻 Usage
-1. **Register/Login** (Email/Password or Google)
-2. **Go to Dashboard**
-3. **Paste or type a message** to check for spam
-4. **Get instant results** (Spam/Not Spam, with confidence)
+## 📁 Project Structure
 
----
+```
+spam detection/
+├── backend/
+│   ├── api.py                 # Main Flask API
+│   ├── requirements.txt       # Python dependencies
+│   ├── vercel.json           # Backend Vercel config
+│   └── sentence_transformer_model/  # AI model files
+├── my-app/
+│   ├── src/
+│   │   ├── components/       # React components
+│   │   ├── App.js           # Main app component
+│   │   └── firebase.js      # Firebase configuration
+│   ├── package.json         # Node.js dependencies
+│   └── vercel.json          # Frontend Vercel config
+└── README.md
+```
 
-## 📊 Model Details
-- Preprocessing: Lowercasing, removing emails/phones, special chars, etc.
-- Model: Bidirectional LSTM, trained on Enron spam dataset
-- Extra rules: Keyword boosting, HTTP link detection
-- Advanced features: Contextual analysis, intent detection
+## 🛠️ Troubleshooting
 
----
+### Common Issues:
 
-## 🤝 Contributing
-1. Fork this repo
-2. Create a new branch (`feature/your-feature`)
-3. Commit your changes
-4. Open a Pull Request
+1. **"Could not connect to Enhanced AI analysis server"**
+   - Check if backend URL is correct in environment variables
+   - Ensure backend is deployed and running
+   - Verify CORS configuration
 
----
+2. **Firebase Authentication Issues**
+   - Verify Firebase environment variables are set correctly
+   - Check Firebase project configuration
+   - Ensure Google OAuth client ID is correct
 
-## 📄 License
-MIT
+3. **CORS Errors**
+   - Backend CORS is configured for production domains
+   - Check if your domain is in the allowed origins list
 
----
+## 🔐 Security Notes
 
-## 🙏 Acknowledgements
-- [Enron Spam Dataset](https://www.kaggle.com/datasets/venky73/spam-mails-dataset)
-- [TensorFlow](https://www.tensorflow.org/)
-- [Create React App](https://create-react-app.dev/)
-- [Firebase](https://firebase.google.com/)
+- Never commit `.env` files to version control
+- Use environment variables for all sensitive configuration
+- Enable Firebase Authentication rules
+- Configure CORS properly for production
 
----
+## 📞 Support
 
-> Made with ❤️ for learning and real-world spam protection!
+For issues related to:
+- Frontend: Check Vercel deployment logs
+- Backend: Check Vercel function logs
+- AI Model: Ensure model files are in the correct location

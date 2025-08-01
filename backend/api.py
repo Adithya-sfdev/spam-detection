@@ -7,7 +7,13 @@ import datetime
 import numpy as np
 
 app = Flask(__name__)
-CORS(app)
+# Enhanced CORS configuration for production
+CORS(app, origins=[
+    "http://localhost:3000",
+    "https://spam-detection-acon-cnrc73gn7-adithya-sfdevs-projects.vercel.app",
+    "https://*.vercel.app",
+    "https://*.netlify.app"
+], methods=["GET", "POST", "OPTIONS"], allow_headers=["Content-Type"])
 
 # Global variables
 model = None

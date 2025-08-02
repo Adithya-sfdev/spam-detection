@@ -9,7 +9,7 @@ app = Flask(__name__)
 # Enhanced CORS configuration for production
 CORS(app, origins=[
     "http://localhost:3000",
-    "https://spam-detection-acon-cnrc73gn7-adithya-sfdevs-projects.vercel.app",
+    "https://spam-detection-acon.vercel.app",
     "https://*.vercel.app",
     "https://*.netlify.app"
 ], methods=["GET", "POST", "OPTIONS"], allow_headers=["Content-Type"])

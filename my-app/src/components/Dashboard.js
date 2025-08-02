@@ -10,8 +10,8 @@ const Dashboard = ({ user, onLogout }) => {
     const [showDetails, setShowDetails] = useState(false);
     const navigate = useNavigate();
 
-    // Get backend URL from environment variable or use default
-    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+    // Get backend URL from environment variable or use default, and ensure no trailing slash
+    const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '');
 
     useEffect(() => {
         if (!user?.isAuthenticated) {

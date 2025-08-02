@@ -32,3 +32,4 @@ spam_model/
 .DS_Store
 .idea/
 .vscode/
+.vercel

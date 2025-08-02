@@ -4,9 +4,11 @@ import pickle
 import re
 import os
 import datetime
+import tensorflow as tf
+from tensorflow.keras.models import load_model
+from sentence_transformers import SentenceTransformer
 
 app = Flask(__name__)
-# Enhanced CORS configuration for production
 CORS(app, origins=[
     "http://localhost:3000",
     "https://spam-detection-acon.vercel.app",
@@ -14,16 +16,37 @@ CORS(app, origins=[
     "https://*.netlify.app"
 ], methods=["GET", "POST", "OPTIONS"], allow_headers=["Content-Type"])
 
-# Global variables
+# Load model, tokenizer, config, and sentence transformer at startup
 model = None
 tokenizer = None
 config = None
 sentence_transformer = None
 
-# Simplified imports for Vercel deployment
-TF_AVAILABLE = False
-SENTENCE_TRANSFORMERS_AVAILABLE = False
-print("🚀 Running in simplified mode for Vercel deployment")
+# --- Load everything at startup ---
+def load_advanced_model():
+    global model, tokenizer, config, sentence_transformer
+    print("🧠 Loading advanced AI model...")
+    try:
+        model = load_model('advanced_spam_model.h5', compile=False)
+        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+        print("✅ Model loaded successfully")
+        with open('advanced_tokenizer.pickle', 'rb') as f:
+            tokenizer = pickle.load(f)
+        print("✅ Tokenizer loaded successfully")
+        with open('advanced_model_config.pickle', 'rb') as f:
+            config = pickle.load(f)
+        print("✅ Config loaded successfully")
+        if os.path.exists('sentence_transformer_model'):
+            sentence_transformer = SentenceTransformer('sentence_transformer_model')
+            print("✅ Sentence transformer loaded from saved model")
+        else:
+            sentence_transformer = SentenceTransformer('all-MiniLM-L6-v2')
+            print("✅ Sentence transformer loaded (fallback)")
+    except Exception as e:
+        print(f"❌ Error loading model or dependencies: {e}")
+        raise
+
+load_advanced_model()
 
 def load_advanced_model():
     """Load the advanced TensorFlow model - COMPLETELY FIXED ALL ISSUES"""
@@ -517,24 +540,34 @@ def log_prediction(text_input, result, method=""):
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    """Simplified spam prediction endpoint for Vercel deployment"""
     try:
         data = request.get_json()
         if not data or 'text' not in data:
             return jsonify({'error': 'No text provided'}), 400
-        
         text = data['text'].strip()
         if not text:
             return jsonify({'error': 'Empty text provided'}), 400
-        
         print(f"🔍 Analyzing text: {text[:50]}...")
-        
-        # Use simplified rule-based prediction for Vercel
-        result = simple_spam_detection(text)
-        
+        # Preprocess
+        processed = advanced_preprocess_text(text)
+        # Tokenize and pad
+        seq = tokenizer.texts_to_sequences([processed])
+        padded = tf.keras.preprocessing.sequence.pad_sequences(seq, maxlen=config['max_len'])
+        # Semantic embedding
+        embedding = sentence_transformer.encode([processed]) if sentence_transformer else None
+        # Predict
+        if embedding is not None:
+            y_pred = model.predict([padded, embedding])
+        else:
+            y_pred = model.predict(padded)
+        pred = float(y_pred[0][0])
+        result = {
+            'prediction': 'Spam' if pred > 0.5 else 'Not Spam',
+            'confidence': pred if pred > 0.5 else 1 - pred,
+            'reason': 'ML model prediction',
+        }
         print(f"📊 Prediction result: {result}")
         return jsonify(result)
-        
     except Exception as e:
         error_msg = f"Internal server error: {str(e)}"
         print(f"❌ Exception in predict(): {error_msg}")

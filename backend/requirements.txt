@@ -1,2 +1,8 @@
 Flask==2.3.3
-Flask-CORS==4.0.0
+flask-cors
+tensorflow==2.15.0
+scikit-learn
+sentence-transformers
+gunicorn
+pickle-mixin
+CORS==4.0.0

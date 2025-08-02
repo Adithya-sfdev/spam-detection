@@ -725,23 +725,7 @@ def health():
         "all_issues_resolved": True
     })
 
-if __name__ == '__main__':
-    print("🚀 Starting Enhanced AI-Powered Spam Detection API v2.1...")
-    print("🔧 Using advanced TensorFlow hybrid LSTM + Transformer model")
-    print("🎯 Optimized for 98.80% accuracy with advanced AI-level contextual understanding")
-    print("✨ Advanced AI-Level Detection - Enhanced spam pattern recognition")
-    print("=" * 60)
-    
-    if load_advanced_model():
-        print("🎉 Enhanced AI model loaded successfully!")
-        print(f"🤖 Model architecture: {config.get('model_architecture', 'hybrid_lstm_transformer')}")
-        print(f"📊 Training accuracy: {config.get('test_accuracy', 0)*100:.2f}%")
-        print("🌐 CORS enabled for frontend communication")
-        print("🚀 Server starting on http://localhost:5000")
-        app.run(host='0.0.0.0', port=5000, debug=True)
-    else:
-        print("❌ Failed to load enhanced model.")
-        print("💡 Make sure these files exist in backend directory:")
-        print("   - advanced_spam_model.h5 (or .keras)")
-        print("   - advanced_tokenizer.pickle")
-        print("   - advanced_model_config.pickle")
+if __name__ == "__main__":
+    # Load models on startup
+    load_advanced_model()
+    app.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

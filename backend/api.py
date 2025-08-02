@@ -21,22 +21,10 @@ tokenizer = None
 config = None
 sentence_transformer = None
 
-# Try importing with proper error handling
-try:
-    import tensorflow as tf
-    from tensorflow.keras.models import load_model
-    from tensorflow.keras.preprocessing.sequence import pad_sequences
-    TF_AVAILABLE = True
-    print("✅ TensorFlow imported successfully")
-except ImportError as e:
-    print(f"❌ TensorFlow import error: {e}")
-    TF_AVAILABLE = False
-
-try:
-    from sentence_transformers import SentenceTransformer
-    SENTENCE_TRANSFORMERS_AVAILABLE = True
-except ImportError:
-    SENTENCE_TRANSFORMERS_AVAILABLE = False
+# Simplified imports for Vercel deployment
+TF_AVAILABLE = False
+SENTENCE_TRANSFORMERS_AVAILABLE = False
+print("🚀 Running in simplified mode for Vercel deployment")
 
 def load_advanced_model():
     """Load the advanced TensorFlow model - COMPLETELY FIXED ALL ISSUES"""
@@ -470,6 +458,53 @@ def enhanced_context_analysis(text):
     
     return analysis
 
+def simple_spam_detection(text):
+    """Simplified rule-based spam detection for Vercel deployment"""
+    text_lower = text.lower()
+    
+    # High-confidence spam patterns
+    spam_patterns = [
+        'click here', 'act now', 'urgent', 'winner', 'congratulations',
+        'free money', 'limited time', 'call now', 'exclusive offer',
+        'found something interesting', 'catch up later', 'want to show you'
+    ]
+    
+    # Simple greetings (not spam)
+    greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening']
+    
+    # Check for simple greetings
+    if text_lower.strip() in greetings or (len(text.split()) <= 3 and any(g in text_lower for g in greetings)):
+        return {
+            'prediction': 'Not Spam',
+            'reason': 'Simple greeting detected',
+            'confidence': 0.95
+        }
+    
+    # Check for spam patterns
+    spam_count = sum(1 for pattern in spam_patterns if pattern in text_lower)
+    
+    if spam_count > 0:
+        return {
+            'prediction': 'Spam',
+            'reason': f'Spam patterns detected: {spam_count}',
+            'confidence': min(0.8 + (spam_count * 0.1), 0.99)
+        }
+    
+    # Check for suspicious links
+    if 'http://' in text_lower:
+        return {
+            'prediction': 'Spam',
+            'reason': 'Insecure HTTP link detected',
+            'confidence': 0.85
+        }
+    
+    # Default to not spam for simple messages
+    return {
+        'prediction': 'Not Spam',
+        'reason': 'No spam indicators found',
+        'confidence': 0.7
+    }
+
 def log_prediction(text_input, result, method=""):
     """Enhanced logging with better formatting"""
     timestamp = datetime.datetime.now().strftime("%H:%M:%S")
@@ -483,158 +518,23 @@ def log_prediction(text_input, result, method=""):
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if not model or not tokenizer:
-        return jsonify({'error': 'Advanced AI model not loaded'}), 500
-    
+    """Simplified spam prediction endpoint for Vercel deployment"""
     try:
         data = request.get_json()
         if not data or 'text' not in data:
-            return jsonify({'error': 'Text input required'}), 400
+            return jsonify({'error': 'No text provided'}), 400
         
-        text_input = data['text'].strip()
-        print(f"\n🧠 Advanced AI-level analysis for: '{text_input}'")
+        text = data['text'].strip()
+        if not text:
+            return jsonify({'error': 'Empty text provided'}), 400
         
-        # Perform enhanced contextual analysis
-        context_analysis = enhanced_context_analysis(text_input)
+        print(f"🔍 Analyzing text: {text[:50]}...")
         
-        # HIGH-PRIORITY SPAM DETECTION (Advanced AI-level)
-        high_confidence_spam_patterns = [
-            'found something interesting',
-            'catch up later',
-            'want to show you something',
-            'think you\'d be interested',
-            'have something for you',
-            'click here now',
-            'urgent action required',
-            'limited time offer',
-            'congratulations you won',
-            'free money',
-            'act now',
-            'call now'
-        ]
+        # Use simplified rule-based prediction for Vercel
+        result = simple_spam_detection(text)
         
-        # Check for obvious spam patterns first
-        spam_pattern_count = sum(1 for pattern in high_confidence_spam_patterns if pattern in text_input.lower())
-        
-        if spam_pattern_count > 0:
-            # Additional check for social engineering
-            if len(text_input.split()) < 20 and spam_pattern_count >= 1:
-                # Check if message lacks specific context
-                specific_contexts = ['work', 'project', 'meeting', 'office', 'family', 'friend', 'school', 'restaurant', 'book', 'movie', 'article', 'news']
-                has_specific_context = any(ctx in text_input.lower() for ctx in specific_contexts)
-                
-                if not has_specific_context:
-                    result = {
-                        'prediction': 'Spam',
-                        'reason': f'High-confidence spam pattern detected: lacks specific context',
-                        'confidence': 0.92,
-                        'analysis': context_analysis
-                    }
-                    log_prediction(text_input, result, "(High-Confidence Spam Detection)")
-                    return jsonify(result)
-        
-        # Only apply "Not Spam" rules for VERY obvious legitimate cases
-        # Strict greeting detection (only very simple ones)
-        simple_greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening']
-        if (text_input.lower().strip() in simple_greetings or 
-            (len(text_input.split()) <= 3 and any(greeting in text_input.lower() for greeting in simple_greetings))):
-            result = {
-                'prediction': 'Not Spam',
-                'reason': 'Simple greeting detected',
-                'confidence': 0.98,
-                'analysis': context_analysis
-            }
-            log_prediction(text_input, result, "(Simple Greeting)")
-            return jsonify(result)
-        
-        # HTTP link detection (insecure links are spam)
-        if 'http://' in text_input.lower():
-            result = {
-                'prediction': 'Spam',
-                'reason': 'Insecure HTTP link detected',
-                'confidence': 0.95,
-                'analysis': context_analysis
-            }
-            log_prediction(text_input, result, "(Insecure Link)")
-            return jsonify(result)
-        
-        # Use AI model for analysis
-        print(f"🤖 Using AI model for advanced-level analysis...")
-        
-        # Preprocess text
-        processed_text = advanced_preprocess_text(text_input)
-        print(f"🧹 Cleaned text: '{processed_text}'")
-        
-        if not processed_text.strip():
-            result = {
-                'prediction': 'Not Spam',
-                'reason': 'Empty text after cleaning',
-                'analysis': context_analysis
-            }
-            log_prediction(text_input, result, "(Empty Text)")
-            return jsonify(result)
-        
-        # Get model prediction
-        try:
-            if sentence_transformer and config.get('embedding_dim'):
-                print("🔥 Using hybrid LSTM + Transformer model...")
-                embedding = sentence_transformer.encode([processed_text])
-                sequence = tokenizer.texts_to_sequences([processed_text])
-                padded_sequence = pad_sequences(sequence, maxlen=config['max_len'], padding='post')
-                prediction_prob = model.predict([padded_sequence, embedding], verbose=0)[0][0]
-            else:
-                print("🔥 Using LSTM model...")
-                sequence = tokenizer.texts_to_sequences([processed_text])
-                padded_sequence = pad_sequences(sequence, maxlen=config.get('max_len', 150), padding='post')
-                prediction_prob = model.predict(padded_sequence, verbose=0)[0][0]
-                
-        except Exception as prediction_error:
-            print(f"⚠️  Model prediction failed: {prediction_error}")
-            if context_analysis['risk_assessment'] in ['high', 'medium']:
-                prediction_prob = 0.8
-            else:
-                prediction_prob = 0.3
-        
-        print(f"🔢 Raw model confidence: {prediction_prob:.3f}")
-        
-        # MINIMAL contextual adjustments (Advanced AI-like behavior)
-        original_confidence = float(prediction_prob)
-        adjusted_confidence = original_confidence
-        
-        # Only adjust for VERY obvious legitimate business communications
-        if (context_analysis['intent'] == 'business' and 
-            context_analysis['sophistication_level'] == 'professional' and 
-            any(word in text_input.lower() for word in ['meeting', 'schedule', 'project', 'office', 'work', 'contract', 'proposal'])):
-            adjusted_confidence = original_confidence * 0.6
-            context_analysis['confidence_factors'].append(f'Business context adjustment: {original_confidence:.3f} → {adjusted_confidence:.3f}')
-        
-        # Only adjust for personal messages with very low risk
-        elif (context_analysis['intent'] == 'personal' and 
-              context_analysis['risk_assessment'] == 'very_low' and
-              any(word in text_input.lower() for word in ['family', 'friend', 'mom', 'dad', 'brother', 'sister'])):
-            adjusted_confidence = original_confidence * 0.5
-            context_analysis['confidence_factors'].append(f'Personal context adjustment: {original_confidence:.3f} → {adjusted_confidence:.3f}')
-        
-        # IMPORTANT: Respect the model's decision more (like advanced AI systems)
-        # Lower threshold for spam detection
-        result_prediction = 'Spam' if adjusted_confidence > 0.35 else 'Not Spam'  # Lowered from 0.5
-        
-        # Enhanced response
-        response = {
-            'prediction': result_prediction,
-            'confidence': adjusted_confidence,
-            'analysis': context_analysis,
-            'explanation': f"Advanced AI analysis (98.80% accuracy) detected {context_analysis['intent']} intent with {context_analysis['risk_assessment']} risk level. Raw model confidence: {original_confidence:.3f}",
-            'model_info': {
-                'architecture': config.get('model_architecture', 'hybrid_lstm_transformer'),
-                'training_accuracy': f"{config.get('test_accuracy', 0)*100:.2f}%",
-                'semantic_analysis': sentence_transformer is not None,
-                'detection_threshold': 0.35
-            }
-        }
-        
-        log_prediction(text_input, response, "(Advanced AI-Level)")
-        return jsonify(response)
+        print(f"📊 Prediction result: {result}")
+        return jsonify(result)
         
     except Exception as e:
         error_msg = f"Internal server error: {str(e)}"

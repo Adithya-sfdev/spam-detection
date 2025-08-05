@@ -97,7 +97,7 @@ def load_advanced_model():
                     # Restore original custom objects
                     tf.keras.utils.get_custom_objects().clear()
                     tf.keras.utils.get_custom_objects().update(original_custom_objects)
-                        
+                            
             except Exception as e:
                 print(f"⚠️  Fixed layer ignoring failed: {e}")
         
@@ -111,93 +111,91 @@ def load_advanced_model():
                     import h5py
                     h5py_available = True
                 except ImportError:
-                    print("⚠️  h5py not available, installing...")
-                    import subprocess
-                    subprocess.check_call(['pip', 'install', 'h5py'])
-                    import h5py
-                    h5py_available = True
-                
-                # Build the exact model architecture manually
-                from tensorflow.keras.models import Model
-                from tensorflow.keras.layers import Input, Embedding, LSTM, Dense, Dropout, Bidirectional, GlobalMaxPooling1D, Concatenate
-                
-                max_len = 150
-                vocab_size = 8000
-                embedding_dim = 384
-                
-                # Recreate your exact model architecture
-                text_input = Input(shape=(max_len,), name='text_input')
-                embedding_input = Input(shape=(embedding_dim,), name='embedding_input')
-                
-                # Text processing branch
-                embedding_layer = Embedding(vocab_size, 128)(text_input)
-                lstm_layer = Bidirectional(LSTM(64, return_sequences=True, dropout=0.2, recurrent_dropout=0.2))(embedding_layer)
-                lstm_pool = GlobalMaxPooling1D()(lstm_layer)
-                
-                # Semantic branch
-                semantic_dense1 = Dense(256, activation='relu')(embedding_input)
-                semantic_dropout1 = Dropout(0.3)(semantic_dense1)
-                semantic_dense2 = Dense(128, activation='relu')(semantic_dropout1)
-                semantic_dropout2 = Dropout(0.2)(semantic_dense2)
-                
-                # Combine
-                merged = Concatenate()([lstm_pool, semantic_dropout2])
-                
-                # Classification head
-                dense1 = Dense(128, activation='relu')(merged)
-                dropout1 = Dropout(0.4)(dense1)
-                dense2 = Dense(64, activation='relu')(dropout1)
-                dropout2 = Dropout(0.3)(dense2)
-                dense3 = Dense(32, activation='relu')(dropout2)
-                dropout3 = Dropout(0.2)(dense3)
-                output = Dense(1, activation='sigmoid', name='spam_prediction')(dropout3)
-                
-                model = Model(inputs=[text_input, embedding_input], outputs=output)
-                
-                # Enhanced weight loading with multiple approaches
-                weights_loaded = False
-                
-                # Approach 1: Direct H5 weight loading
-                try:
-                    with h5py.File('advanced_spam_model.h5', 'r') as f:
-                        if 'model_weights' in f.keys():
-                            model.load_weights('advanced_spam_model.h5', by_name=True, skip_mismatch=True)
-                            print("🎉 Successfully loaded original weights from H5 model_weights!")
-                            weights_loaded = True
-                        else:
-                            print("⚠️  model_weights key not found, trying alternative approach...")
-                except Exception as e:
-                    print(f"⚠️  Direct H5 loading failed: {e}")
-                
-                # Approach 2: Load temporary model and extract weights
-                if not weights_loaded:
+                    print("⚠️  h5py not available. It must be in requirements.txt")
+                    h5py_available = False
+
+                if h5py_available:
+                    # Build the exact model architecture manually
+                    from tensorflow.keras.models import Model
+                    from tensorflow.keras.layers import Input, Embedding, LSTM, Dense, Dropout, Bidirectional, GlobalMaxPooling1D, Concatenate
+                    
+                    max_len = 150
+                    vocab_size = 8000
+                    embedding_dim = 384
+                    
+                    # Recreate your exact model architecture
+                    text_input = Input(shape=(max_len,), name='text_input')
+                    embedding_input = Input(shape=(embedding_dim,), name='embedding_input')
+                    
+                    # Text processing branch
+                    embedding_layer = Embedding(vocab_size, 128)(text_input)
+                    lstm_layer = Bidirectional(LSTM(64, return_sequences=True, dropout=0.2, recurrent_dropout=0.2))(embedding_layer)
+                    lstm_pool = GlobalMaxPooling1D()(lstm_layer)
+                    
+                    # Semantic branch
+                    semantic_dense1 = Dense(256, activation='relu')(embedding_input)
+                    semantic_dropout1 = Dropout(0.3)(semantic_dense1)
+                    semantic_dense2 = Dense(128, activation='relu')(semantic_dropout1)
+                    semantic_dropout2 = Dropout(0.2)(semantic_dense2)
+                    
+                    # Combine
+                    merged = Concatenate()([lstm_pool, semantic_dropout2])
+                    
+                    # Classification head
+                    dense1 = Dense(128, activation='relu')(merged)
+                    dropout1 = Dropout(0.4)(dense1)
+                    dense2 = Dense(64, activation='relu')(dropout1)
+                    dropout2 = Dropout(0.3)(dense2)
+                    dense3 = Dense(32, activation='relu')(dropout2)
+                    dropout3 = Dropout(0.2)(dense3)
+                    output = Dense(1, activation='sigmoid', name='spam_prediction')(dropout3)
+                    
+                    model = Model(inputs=[text_input, embedding_input], outputs=output)
+                    
+                    # Enhanced weight loading with multiple approaches
+                    weights_loaded = False
+                    
+                    # Approach 1: Direct H5 weight loading
                     try:
-                        # Create custom objects for loading the original model
-                        class TempDummyLayer(tf.keras.layers.Layer):
-                            def __init__(self, **kwargs):
-                                super().__init__(**kwargs)
-                            def call(self, inputs):
-                                return inputs[0] if isinstance(inputs, list) else inputs
-                        
-                        temp_custom_objects = {'NotEqual': TempDummyLayer, 'Equal': TempDummyLayer}
-                        
-                        with tf.keras.utils.custom_object_scope(temp_custom_objects):
-                            temp_model = load_model('advanced_spam_model.h5', compile=False)
-                            original_weights = temp_model.get_weights()
-                            model.set_weights(original_weights)
-                            print("🎉 Successfully extracted and loaded original weights!")
-                            weights_loaded = True
-                            
+                        with h5py.File('advanced_spam_model.h5', 'r') as f:
+                            if 'model_weights' in f.keys():
+                                model.load_weights('advanced_spam_model.h5', by_name=True, skip_mismatch=True)
+                                print("🎉 Successfully loaded original weights from H5 model_weights!")
+                                weights_loaded = True
+                            else:
+                                print("⚠️  model_weights key not found, trying alternative approach...")
                     except Exception as e:
-                        print(f"⚠️  Weight extraction failed: {e}")
-                
-                if not weights_loaded:
-                    print("⚠️  Using fresh model (will need retraining)")
-                
-                model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-                model_loaded = True
-                print("✅ Model architecture rebuilt successfully")
-                
+                        print(f"⚠️  Direct H5 loading failed: {e}")
+                    
+                    # Approach 2: Load temporary model and extract weights
+                    if not weights_loaded:
+                        try:
+                            # Create custom objects for loading the original model
+                            class TempDummyLayer(tf.keras.layers.Layer):
+                                def __init__(self, **kwargs):
+                                    super().__init__(**kwargs)
+                                def call(self, inputs):
+                                    return inputs[0] if isinstance(inputs, list) else inputs
+                            
+                            temp_custom_objects = {'NotEqual': TempDummyLayer, 'Equal': TempDummyLayer}
+                            
+                            with tf.keras.utils.custom_object_scope(temp_custom_objects):
+                                temp_model = load_model('advanced_spam_model.h5', compile=False)
+                                original_weights = temp_model.get_weights()
+                                model.set_weights(original_weights)
+                                print("🎉 Successfully extracted and loaded original weights!")
+                                weights_loaded = True
+                                
+                        except Exception as e:
+                            print(f"⚠️  Weight extraction failed: {e}")
+                    
+                    if not weights_loaded:
+                        print("⚠️  Using fresh model (will need retraining)")
+                    
+                    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+                    model_loaded = True
+                    print("✅ Model architecture rebuilt successfully")
+                    
             except Exception as e:
                 print(f"⚠️  Architecture rebuilding failed: {e}")
         
@@ -221,7 +219,7 @@ def load_advanced_model():
                 finally:
                     # Re-enable v2 behavior
                     tf.compat.v1.enable_v2_behavior()
-                    
+                        
             except Exception as e:
                 print(f"⚠️  Legacy compatibility failed: {e}")
         
@@ -287,7 +285,7 @@ def load_advanced_model():
             }
             print("⚠️  Using default configuration")
         
-        # Load sentence transformer with auto-installation
+        # Load sentence transformer
         if SENTENCE_TRANSFORMERS_AVAILABLE:
             try:
                 if os.path.exists('sentence_transformer_model'):
@@ -298,13 +296,7 @@ def load_advanced_model():
                     print("✅ Sentence transformer loaded (fallback)")
             except Exception as e:
                 print(f"⚠️  Could not load sentence transformer: {e}")
-                try:
-                    import subprocess
-                    subprocess.check_call(['pip', 'install', 'sentence-transformers'])
-                    sentence_transformer = SentenceTransformer('all-MiniLM-L6-v2')
-                    print("✅ Sentence transformers installed and loaded")
-                except:
-                    sentence_transformer = None
+                sentence_transformer = None
         else:
             sentence_transformer = None
             
@@ -604,8 +596,8 @@ def predict():
         
         # Only adjust for personal messages with very low risk
         elif (context_analysis['intent'] == 'personal' and 
-              context_analysis['risk_assessment'] == 'very_low' and
-              any(word in text_input.lower() for word in ['family', 'friend', 'mom', 'dad', 'brother', 'sister'])):
+                context_analysis['risk_assessment'] == 'very_low' and
+                any(word in text_input.lower() for word in ['family', 'friend', 'mom', 'dad', 'brother', 'sister'])):
             adjusted_confidence = original_confidence * 0.5
             context_analysis['confidence_factors'].append(f'Personal context adjustment: {original_confidence:.3f} → {adjusted_confidence:.3f}')
         
@@ -719,14 +711,22 @@ def health():
         "all_issues_resolved": True
     })
 
+# --- IMPORTANT: THIS CODE RUNS ONCE WHEN THE SERVER STARTS ---
+# Gunicorn and other production servers will execute this block to load the model into memory.
+load_advanced_model()
+
+# --- FOR LOCAL DEBUGGING ONLY ---
+# The block below is ONLY executed when you run `python api.py` directly.
+# Production servers like Gunicorn IGNORE this part.
 if __name__ == '__main__':
-    print("🚀 Starting Enhanced AI-Powered Spam Detection API v2.1...")
+    print("=" * 60)
+    print("🚀 Starting Enhanced AI-Powered Spam Detection API v2.1 (DEBUG MODE)")
     print("🔧 Using advanced TensorFlow hybrid LSTM + Transformer model")
     print("🎯 Optimized for 98.80% accuracy with advanced AI-level contextual understanding")
-    print("✨ Advanced AI-Level Detection - Enhanced spam pattern recognition")
     print("=" * 60)
     
-    if load_advanced_model():
+    # The load_advanced_model() call is now outside this block, so it runs in production too.
+    if model:
         print("🎉 Enhanced AI model loaded successfully!")
         print(f"🤖 Model architecture: {config.get('model_architecture', 'hybrid_lstm_transformer')}")
         print(f"📊 Training accuracy: {config.get('test_accuracy', 0)*100:.2f}%")
@@ -734,8 +734,5 @@ if __name__ == '__main__':
         print("🚀 Server starting on http://localhost:5000")
         app.run(host='0.0.0.0', port=5000, debug=True)
     else:
-        print("❌ Failed to load enhanced model.")
-        print("💡 Make sure these files exist in backend directory:")
-        print("   - advanced_spam_model.h5 (or .keras)")
-        print("   - advanced_tokenizer.pickle")
-        print("   - advanced_model_config.pickle")
+        print("❌ CRITICAL: Failed to load the AI model.")
+        print("   The server cannot start. Please check the error messages above.")

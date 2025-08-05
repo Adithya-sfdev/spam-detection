@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'; // Changed from BrowserRouter to HashRouter
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Login from './components/Login';
 import Register from './components/Register';
@@ -26,7 +26,8 @@ function App() {
 
   return (
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
-      <Router basename={process.env.PUBLIC_URL || '/'}>
+      {/* The basename prop has been removed from HashRouter */}
+      <Router>
         <div className="App">
           <Routes>
             <Route

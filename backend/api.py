@@ -6,14 +6,17 @@ import os
 import datetime
 import numpy as np
 
+
 app = Flask(__name__)
 CORS(app)
+
 
 # Global variables
 model = None
 tokenizer = None
 config = None
 sentence_transformer = None
+
 
 # Try importing with proper error handling
 try:
@@ -26,15 +29,21 @@ except ImportError as e:
     print(f"❌ TensorFlow import error: {e}")
     TF_AVAILABLE = False
 
+
 try:
     from sentence_transformers import SentenceTransformer
     SENTENCE_TRANSFORMERS_AVAILABLE = True
 except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
 
+
 def load_advanced_model():
     """Load the advanced TensorFlow model - COMPLETELY FIXED ALL ISSUES"""
     global model, tokenizer, config, sentence_transformer
+    
+    # --- VERCEL FIX: Construct absolute paths to model files ---
+    # This finds the project root directory from within the /api folder.
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     
     if not TF_AVAILABLE:
         print("❌ TensorFlow not available")
@@ -45,10 +54,11 @@ def load_advanced_model():
         model_loaded = False
         
         # Strategy 1: Try newer Keras format first
-        if os.path.exists('advanced_spam_model.keras'):
+        model_path_keras = os.path.join(project_root, 'advanced_spam_model.keras')
+        if os.path.exists(model_path_keras):
             try:
                 print("🔄 Attempt 1: Loading Keras format...")
-                model = load_model('advanced_spam_model.keras', compile=False)
+                model = load_model(model_path_keras, compile=False)
                 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
                 print("✅ Model loaded successfully using Keras format")
                 model_loaded = True
@@ -56,7 +66,8 @@ def load_advanced_model():
                 print(f"⚠️  Keras format failed: {e}")
         
         # Strategy 2: Load H5 with FIXED layer ignoring
-        if not model_loaded and os.path.exists('advanced_spam_model.h5'):
+        model_path_h5 = os.path.join(project_root, 'advanced_spam_model.h5')
+        if not model_loaded and os.path.exists(model_path_h5):
             try:
                 print("🔄 Attempt 2: Loading H5 with FIXED layer ignoring...")
                 
@@ -89,7 +100,7 @@ def load_advanced_model():
                 tf.keras.utils.get_custom_objects()['Equal'] = FixedDummyLayer
                 
                 try:
-                    model = load_model('advanced_spam_model.h5', compile=False)
+                    model = load_model(model_path_h5, compile=False)
                     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
                     print("✅ Model loaded successfully with FIXED layer ignoring")
                     model_loaded = True
@@ -102,7 +113,7 @@ def load_advanced_model():
                 print(f"⚠️  Fixed layer ignoring failed: {e}")
         
         # Strategy 3: Load model architecture and weights separately (ENHANCED)
-        if not model_loaded and os.path.exists('advanced_spam_model.h5'):
+        if not model_loaded and os.path.exists(model_path_h5):
             try:
                 print("🔄 Attempt 3: Loading architecture and weights separately...")
                 
@@ -157,9 +168,9 @@ def load_advanced_model():
                     
                     # Approach 1: Direct H5 weight loading
                     try:
-                        with h5py.File('advanced_spam_model.h5', 'r') as f:
+                        with h5py.File(model_path_h5, 'r') as f:
                             if 'model_weights' in f.keys():
-                                model.load_weights('advanced_spam_model.h5', by_name=True, skip_mismatch=True)
+                                model.load_weights(model_path_h5, by_name=True, skip_mismatch=True)
                                 print("🎉 Successfully loaded original weights from H5 model_weights!")
                                 weights_loaded = True
                             else:
@@ -180,7 +191,7 @@ def load_advanced_model():
                             temp_custom_objects = {'NotEqual': TempDummyLayer, 'Equal': TempDummyLayer}
                             
                             with tf.keras.utils.custom_object_scope(temp_custom_objects):
-                                temp_model = load_model('advanced_spam_model.h5', compile=False)
+                                temp_model = load_model(model_path_h5, compile=False)
                                 original_weights = temp_model.get_weights()
                                 model.set_weights(original_weights)
                                 print("🎉 Successfully extracted and loaded original weights!")
@@ -200,7 +211,7 @@ def load_advanced_model():
                 print(f"⚠️  Architecture rebuilding failed: {e}")
         
         # Strategy 4: Legacy compatibility mode
-        if not model_loaded and os.path.exists('advanced_spam_model.h5'):
+        if not model_loaded and os.path.exists(model_path_h5):
             try:
                 print("🔄 Attempt 4: Legacy compatibility mode...")
                 
@@ -212,7 +223,7 @@ def load_advanced_model():
                 
                 try:
                     with tf_v1.Session() as sess:
-                        model = load_model('advanced_spam_model.h5', compile=False)
+                        model = load_model(model_path_h5, compile=False)
                         model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
                         print("✅ Model loaded with legacy compatibility")
                         model_loaded = True
@@ -227,8 +238,9 @@ def load_advanced_model():
         if not model_loaded:
             try:
                 print("🔄 Attempt 5: Loading simple fallback model...")
-                if os.path.exists('spam_model.h5'):
-                    model = load_model('spam_model.h5', compile=False)
+                fallback_model_path = os.path.join(project_root, 'spam_model.h5')
+                if os.path.exists(fallback_model_path):
+                    model = load_model(fallback_model_path, compile=False)
                     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
                     print("✅ Fallback model loaded successfully")
                     model_loaded = True
@@ -241,38 +253,36 @@ def load_advanced_model():
             raise Exception("All model loading strategies failed")
         
         # Load tokenizer with enhanced error handling
-        tokenizer_files = ['advanced_tokenizer.pickle', 'tokenizer.pickle']
         tokenizer_loaded = False
-        
-        for tokenizer_file in tokenizer_files:
+        for tokenizer_file_name in ['advanced_tokenizer.pickle', 'tokenizer.pickle']:
+            tokenizer_path = os.path.join(project_root, tokenizer_file_name)
             try:
-                if os.path.exists(tokenizer_file):
-                    with open(tokenizer_file, 'rb') as f:
+                if os.path.exists(tokenizer_path):
+                    with open(tokenizer_path, 'rb') as f:
                         tokenizer = pickle.load(f)
-                    print(f"✅ Tokenizer loaded from {tokenizer_file}")
+                    print(f"✅ Tokenizer loaded from {tokenizer_file_name}")
                     tokenizer_loaded = True
                     break
             except Exception as e:
-                print(f"⚠️  Failed to load {tokenizer_file}: {e}")
+                print(f"⚠️  Failed to load {tokenizer_file_name}: {e}")
                 continue
         
         if not tokenizer_loaded:
             raise Exception("Failed to load tokenizer")
         
         # Load config with enhanced error handling
-        config_files = ['advanced_model_config.pickle', 'model_config.pickle']
         config_loaded = False
-        
-        for config_file in config_files:
+        for config_file_name in ['advanced_model_config.pickle', 'model_config.pickle']:
+            config_path = os.path.join(project_root, config_file_name)
             try:
-                if os.path.exists(config_file):
-                    with open(config_file, 'rb') as f:
+                if os.path.exists(config_path):
+                    with open(config_path, 'rb') as f:
                         config = pickle.load(f)
-                    print(f"✅ Configuration loaded from {config_file}")
+                    print(f"✅ Configuration loaded from {config_file_name}")
                     config_loaded = True
                     break
             except Exception as e:
-                print(f"⚠️  Failed to load {config_file}: {e}")
+                print(f"⚠️  Failed to load {config_file_name}: {e}")
                 continue
         
         if not config_loaded:
@@ -288,12 +298,9 @@ def load_advanced_model():
         # Load sentence transformer
         if SENTENCE_TRANSFORMERS_AVAILABLE:
             try:
-                if os.path.exists('sentence_transformer_model'):
-                    sentence_transformer = SentenceTransformer('sentence_transformer_model')
-                    print("✅ Sentence transformer loaded from saved model")
-                else:
-                    sentence_transformer = SentenceTransformer('all-MiniLM-L6-v2')
-                    print("✅ Sentence transformer loaded (fallback)")
+                # In Vercel's read-only filesystem, always load from Hugging Face cache
+                sentence_transformer = SentenceTransformer('all-MiniLM-L6-v2')
+                print("✅ Sentence transformer loaded")
             except Exception as e:
                 print(f"⚠️  Could not load sentence transformer: {e}")
                 sentence_transformer = None
@@ -308,6 +315,7 @@ def load_advanced_model():
     except Exception as e:
         print(f"❌ Error loading advanced model: {e}")
         return False
+
 
 def advanced_preprocess_text(text):
     """Enhanced preprocessing with better error handling"""
@@ -359,6 +367,7 @@ def advanced_preprocess_text(text):
     except Exception as e:
         print(f"⚠️  Preprocessing error: {e}")
         return text.lower() if isinstance(text, str) else ""
+
 
 def enhanced_context_analysis(text):
     """Enhanced contextual analysis with sophisticated patterns"""
@@ -456,6 +465,7 @@ def enhanced_context_analysis(text):
     
     return analysis
 
+
 def log_prediction(text_input, result, method=""):
     """Enhanced logging with better formatting"""
     timestamp = datetime.datetime.now().strftime("%H:%M:%S")
@@ -466,6 +476,7 @@ def log_prediction(text_input, result, method=""):
     if 'confidence' in result:
         print(f"[{timestamp}] 📊 Confidence: {result['confidence']:.3f}")
     print("-" * 50)
+
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -627,6 +638,7 @@ def predict():
         print(f"❌ Exception in predict(): {error_msg}")
         return jsonify({'error': error_msg}), 500
 
+
 @app.route('/', methods=['GET'])
 def index():
     """Enhanced health check endpoint"""
@@ -657,6 +669,7 @@ def index():
     print(f"🏥 Enhanced health check: {status_info}")
     return jsonify(status_info)
 
+
 @app.route('/debug', methods=['GET'])
 def debug():
     """Enhanced debug endpoint"""
@@ -677,6 +690,7 @@ def debug():
         "all_issues_resolved": True
     }
     return jsonify(debug_info)
+
 
 @app.route('/test', methods=['POST'])
 def test():
@@ -700,6 +714,7 @@ def test():
         'analysis_version': '2.1'
     })
 
+
 @app.route('/health', methods=['GET'])
 def health():
     """Simple health check for monitoring"""
@@ -711,13 +726,15 @@ def health():
         "all_issues_resolved": True
     })
 
+
 # --- IMPORTANT: THIS CODE RUNS ONCE WHEN THE SERVER STARTS ---
-# Gunicorn and other production servers will execute this block to load the model into memory.
+# Vercel will execute this module-level code to load the model into memory.
 load_advanced_model()
+
 
 # --- FOR LOCAL DEBUGGING ONLY ---
 # The block below is ONLY executed when you run `python api.py` directly.
-# Production servers like Gunicorn IGNORE this part.
+# Production servers like Vercel IGNORE this part.
 if __name__ == '__main__':
     print("=" * 60)
     print("🚀 Starting Enhanced AI-Powered Spam Detection API v2.1 (DEBUG MODE)")

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'; // Changed from BrowserRouter to HashRouter
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Login from './components/Login';
 import Register from './components/Register';
@@ -9,7 +9,6 @@ function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Check if user is already logged in
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
@@ -27,7 +26,6 @@ function App() {
 
   return (
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
-      {/* Use PUBLIC_URL so routing works under any subfolder */}
       <Router basename={process.env.PUBLIC_URL || '/'}>
         <div className="App">
           <Routes>

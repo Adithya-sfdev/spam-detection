@@ -1,106 +1,111 @@
-# Advanced Spam Detection System
-## _AI-Powered, Modern, and User-Friendly_
+# Advanced AI Spam Detection (Full‑Stack)
 
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)](https://www.python.org/)
-[![React](https://img.shields.io/badge/React-18-blue?logo=react)](https://react.dev/)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+AI‑powered spam detection with a Python/Flask backend and a modern React frontend. Lightweight deployment (TFLite runtime) for fast boots on Render, and static hosting on GitHub Pages or Vercel for the UI.
 
-A modern, full-stack Spam Detection System using Machine Learning (TensorFlow), Flask API, and a beautiful React frontend with Firebase Authentication.
+Live (GitHub Pages): [`adithya-sfdev.github.io/spam-detection`](https://adithya-sfdev.github.io/spam-detection/)
 
 ---
 
-## 🚀 Features
-- **Real-time Spam Detection** using a trained ML model (LSTM, TensorFlow)
-- **REST API** backend with Flask
-- **User Authentication** (Email/Password & Google via Firebase)
-- **Attractive, Responsive UI** (React)
-- **Client-side fallback detection** if backend is offline
-- **Keyword-based spam heuristics** for extra accuracy
-- **Easy to deploy** (Docker-ready, local setup)
+## Features
+- Real‑time spam prediction via REST API (`/predict`)
+- Enhanced semantic/heuristic analysis with detailed explanations
+- React UI with Firebase auth (email/password + Google)
+- CORS‑enabled API for cross‑origin frontends
+- Health endpoints: `/`, `/health`, `/debug`
 
 ---
 
-## 🛠️ Tech Stack
-- **Frontend:** React, Firebase Auth, CSS
-- **Backend:** Python, Flask, TensorFlow, Scikit-learn
-- **ML Model:** LSTM Neural Network (Keras)
-- **Data:** Enron Spam Dataset
+## Tech Stack
+- Frontend: React 18, React Router, Firebase Auth, CSS
+- Backend: Python 3.11, Flask, Gunicorn, NumPy, TFLite Runtime
+- Model: LSTM hybrid architecture (Keras); runtime served via `.tflite`
 
 ---
 
-## 📦 Project Structure
+## Project Structure
 ```
-spam-detection/
-  backend/         # Flask API + ML model
-    api.py
+spam detection/
+  api/                       # Flask API service
+    api.py                   # App entry (exposes /predict, /health, ...)
+
+  backend/                   # Training / experimentation (local only)
     train_model.py
-    advanced_spam_model.h5    # Saved model
-    advanced_tokenizer.pickle # Tokenizer
-    enron_spam_data.csv      # Training data
-  my-app/          # React frontend
-    src/
-      components/  # Login, Register, Dashboard
-      firebase.js  # Firebase config
-  README.md        # (This file)
+    predict_spam.py
+    enron_spam_data.csv
+
+  my-app/                    # React frontend
+    src/                     # Components, styles
+    package.json             # gh‑pages + build scripts
+
+  advanced_spam_model.tflite # Runtime model picked by API
+  advanced_tokenizer.pickle  # Tokenizer
+  advanced_model_config.pickle
+
+  Procfile                   # For Render (Gunicorn)
+  requirements.txt           # Slim deps (uses tflite-runtime)
+  runtime.txt                # Python version for Render
 ```
 
 ---
 
-## ⚡ Quick Start
+## Run locally
 
-### 1. Backend (Flask + ML)
+### Backend (Flask)
 ```bash
-cd backend
 pip install -r requirements.txt
-python train_model.py            # Train & save the model (only needed once)
-python api.py                    # Start the API (default: http://localhost:5000)
+gunicorn -w 2 -k gthread -t 120 -b 0.0.0.0:5000 api.api:app
+# or for quick dev: python api/api.py
 ```
+Model loading order: `advanced_spam_model.tflite` ➜ `spam_model.tflite` ➜ rebuilt `.h5` weights (if TensorFlow present).
 
-### 2. Frontend (React)
+### Frontend (React)
 ```bash
 cd my-app
 npm install
-npm start                        # Runs on http://localhost:3000
+echo REACT_APP_API_BASE=http://localhost:5000 > .env.local
+npm start
 ```
 
 ---
 
-## 🧑‍💻 Usage
-1. **Register/Login** (Email/Password or Google)
-2. **Go to Dashboard**
-3. **Paste or type a message** to check for spam
-4. **Get instant results** (Spam/Not Spam, with confidence)
+## Deploy
+
+### Backend on Render
+- Build: `pip install -r requirements.txt`
+- Start (Procfile): `web: gunicorn -w 2 -k gthread -t 120 -b 0.0.0.0:$PORT api.api:app`
+- Place `advanced_spam_model.tflite`, `advanced_tokenizer.pickle`, `advanced_model_config.pickle` in repo root.
+- Health check path: `/health`
+
+### Frontend on GitHub Pages
+`my-app/package.json` already contains `predeploy`/`deploy` scripts.
+```bash
+cd my-app
+echo REACT_APP_API_BASE=https://<your-render-service>.onrender.com > .env.production
+npm run deploy
+```
+Site: `https://adithya-sfdev.github.io/spam-detection/`
+
+### Frontend on Vercel (optional)
+- Project Root: `my-app/`
+- Build Command: `npm run build`
+- Output Directory: `build`
+- Env var: `REACT_APP_API_BASE=https://<your-render-service>.onrender.com`
 
 ---
 
-## 📊 Model Details
-- Preprocessing: Lowercasing, removing emails/phones, special chars, etc.
-- Model: Bidirectional LSTM, trained on Enron spam dataset
-- Extra rules: Keyword boosting, HTTP link detection
-- Advanced features: Contextual analysis, intent detection
+## API
+- POST `/predict` → `{ text: string }` → `{ prediction, explanation, analysis, model_info }`
+- GET `/health` → service status
+- GET `/` and `/debug` → metadata and diagnostics
 
 ---
 
-## 🤝 Contributing
-1. Fork this repo
-2. Create a new branch (`feature/your-feature`)
-3. Commit your changes
-4. Open a Pull Request
+## Acknowledgements
+- Enron Spam Dataset
+- TensorFlow / Keras
+- Create React App / React Router
+- Firebase Auth
 
 ---
 
-## 📄 License
-MIT
-
----
-
-## 🙏 Acknowledgements
-- [Enron Spam Dataset](https://www.kaggle.com/datasets/venky73/spam-mails-dataset)
-- [TensorFlow](https://www.tensorflow.org/)
-- [Create React App](https://create-react-app.dev/)
-- [Firebase](https://firebase.google.com/)
-
----
-
-> Made with ❤️ for learning and real-world spam protection!
+MIT License

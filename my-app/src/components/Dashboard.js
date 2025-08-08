@@ -85,8 +85,8 @@ const Dashboard = ({ user, onLogout }) => {
         <div className="dashboard-container">
             <nav className="navbar">
                 <div className="navbar-left">
-                    <img src="/logo192.png" alt="Logo" className="navbar-logo" />
-                    <h2>Enhanced AI Spam Detector</h2>
+                    <img src={`${process.env.PUBLIC_URL}/logo192.png`} alt="Logo" className="navbar-logo" />
+                    <h2>Advanced AI Spam Detection</h2>
                 </div>
                 <div className="navbar-right">
                     <button onClick={handleLogout} className="logout-button">Logout</button>

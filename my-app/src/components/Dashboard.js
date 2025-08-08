@@ -110,6 +110,16 @@ const Dashboard = ({ user, onLogout }) => {
                         >
                             {isLoading ? '🧠 AI Analyzing...' : '🔍 Analyze with AI'}
                         </button>
+
+                        {/* Prototype Note */}
+                        <p style={{
+                            fontSize: '0.85rem',
+                            color: '#888',
+                            marginTop: '6px',
+                            fontStyle: 'italic'
+                        }}>
+                            Note*: This is a prototype model — results may vary.
+                        </p>
                     </div>
 
                     {error && (<div className="error-message">❌ {error}</div>)}
@@ -140,7 +150,6 @@ const Dashboard = ({ user, onLogout }) => {
                                         </span>
                                         <span className="analysis-value">{result.analysis.intent || 'neutral'}</span>
                                     </div>
-                                    
                                 </div>
                             )}
 

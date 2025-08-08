@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
+import { API_BASE } from '../config';
 
 const Dashboard = ({ user, onLogout }) => {
     const [inputText, setInputText] = useState('');
@@ -30,7 +31,7 @@ const Dashboard = ({ user, onLogout }) => {
         console.log('Sending request with text:', inputText);
 
         try {
-            const response = await fetch('http://localhost:5000/predict', {
+            const response = await fetch(`${API_BASE}/predict`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: inputText }),

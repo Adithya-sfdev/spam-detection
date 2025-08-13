@@ -8,6 +8,14 @@
       "config": { "distDir": "build" }
     }
   ],
+  "headers": [
+    {
+      "source": "/index.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    }
+  ],
   "routes": [
     { "src": "/api/(.*)", "dest": "api/api.py" },
     { "handle": "filesystem" },

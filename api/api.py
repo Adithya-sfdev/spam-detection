@@ -614,6 +614,7 @@ def log_prediction(text_input, result, method=""):
 # -------------------------
 
 @app.route('/predict', methods=['POST'])
+@app.route('/api/predict', methods=['POST'])
 def predict():
     # --- LAZY LOADING BLOCK: Load model on first request ---
     global model, tokenizer, tflite_interpreter, sentence_transformer
@@ -864,6 +865,7 @@ def predict():
         return jsonify({'error': error_msg}), 500
 
 @app.route('/', methods=['GET'])
+@app.route('/api', methods=['GET'])
 def index():
     """Enhanced health check endpoint"""
     status_info = {
@@ -895,6 +897,7 @@ def index():
     return jsonify(status_info)
 
 @app.route('/debug', methods=['GET'])
+@app.route('/api/debug', methods=['GET'])
 def debug():
     """Enhanced debug endpoint"""
     debug_info = {
@@ -918,6 +921,7 @@ def debug():
     return jsonify(debug_info)
 
 @app.route('/test', methods=['POST'])
+@app.route('/api/test', methods=['POST'])
 def test():
     """Enhanced test endpoint"""
     data = request.get_json()
@@ -938,6 +942,7 @@ def test():
     })
 
 @app.route('/health', methods=['GET'])
+@app.route('/api/health', methods=['GET'])
 def health():
     """Simple health check for monitoring"""
     return jsonify({

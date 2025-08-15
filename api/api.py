@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["https://adithya-sfdev.github.io"])
 
 # Global variables
 model = None
